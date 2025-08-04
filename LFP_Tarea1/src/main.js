@@ -1,14 +1,14 @@
 import Smartphone from "./Smartphone.js";
 
-console.log("🚀 STARTING SMARTPHONE CLASS DEMONSTRATION");
+console.log("STARTING SMARTPHONE CLASS DEMONSTRATION");
 console.log("=".repeat(60));
 
 // Creación de la primera instancia
-console.log("\n📱 CREATING FIRST SMARTPHONE:");
+console.log("\n CREATING FIRST SMARTPHONE:");
 const smartphone1 = new Smartphone("iPhone", "15 Pro", "256", 85, "+502 1234-5678");
 
 // Creación de la segunda instancia
-console.log("\n📱 CREATING SECOND SMARTPHONE:");
+console.log("\n CREATING SECOND SMARTPHONE:");
 const smartphone2 = new Smartphone("Samsung", "Galaxy S24", "512", 45, "+502 8765-4321");
 
 console.log("\n" + "=".repeat(60));
@@ -22,7 +22,7 @@ smartphone1.installApp("WhatsApp", 100);
 smartphone1.chargeBattery(15);
 
 console.log("\n" + "=".repeat(60));
-console.log("🧪 TESTING SECOND SMARTPHONE METHODS");
+console.log("TESTING SECOND SMARTPHONE METHODS");
 console.log("=".repeat(60));
 
 // Probando métodos con el segundo smartphone (apagado)
@@ -35,23 +35,22 @@ smartphone2.chargeBattery(30);
 smartphone2.installApp("TikTok", 120);
 
 console.log("\n" + "=".repeat(60));
-console.log("🔋 ADDITIONAL TESTS - LOW BATTERY AND STORAGE");
+console.log("ADDITIONAL TESTS - LOW BATTERY AND STORAGE");
 console.log("=".repeat(60));
 
-// Crear un tercer smartphone con batería muy baja para probar el límite
 const smartphone3 = new Smartphone("Xiaomi", "Mi 13", "128", 8, "+502 1111-2222");
 smartphone3.turnOn();
-smartphone3.makeCall("+502 9999-8888"); // Debería funcionar
-smartphone3.makeCall("+502 7777-6666"); // Debería funcionar
-smartphone3.makeCall("+502 5555-4444"); // Debería funcionar
-smartphone3.makeCall("+502 3333-2222"); // Debería funcionar
-smartphone3.makeCall("+502 1111-0000"); // Debería dar error de saldo
+smartphone3.makeCall("+502 9999-8888");
+smartphone3.makeCall("+502 7777-6666"); 
+smartphone3.makeCall("+502 5555-4444"); 
+smartphone3.makeCall("+502 3333-2222"); 
+smartphone3.makeCall("+502 1111-0000"); 
 
 // Probar almacenamiento lleno
 smartphone3.installApp("Gran Juego", 150); // Debería dar error de almacenamiento
 
 console.log("\n" + "=".repeat(60));
-console.log("📊 FINAL STATUS OF ALL SMARTPHONES");
+console.log("FINAL STATUS OF ALL SMARTPHONES");
 console.log("=".repeat(60));
 
 smartphone1.showInfo();
