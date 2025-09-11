@@ -1,0 +1,145 @@
+import express from 'express';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import db from '../config/database.js';
+
+const router = express.Router();
+
+//registrar usuario
+router.post('/register', async(req, res) => {
+    try{
+        const {registro_academico, nombres, apellidos, email, password} = req.body;
+
+        if(!registro_academico || !nombres || !apellidos || !email || !password){
+            return res.status(400).json({message: 'Todos los campos son obligatorios'});
+        }
+
+        await db.query(
+            'SELECT * FROM usuarios WHERE registro_academico = ? OR email = ?',
+            [registro_academico, email],
+            async (error, results) => {
+                if(error){
+                    return res.status(500).json({message: 'error en la base de datos'});
+                }
+                if (results.length > 0){
+                    return res.status(409).json({message: 'El registro academico o email ya estan en uso'});
+                }
+                const hashedPassword = await bcrypt.hash(password, 10);
+                db.query(
+                    'INSERT INTO usuarios (registro_academico, nombres, apellidos, email, password) VALUES (?, ?, ?, ?, ?)',
+                    [registro_academico, nombres, apellidos, email, hashedPassword],
+                    (error, results) => {
+                        if (error) {
+                            return res.status(500).json({message: 'Error al insertar usuario', error});
+                        }
+                        res.status(201).json({
+                            message: 'Usuario registrado exitosamente',
+                            userId: results.insertId
+                        });
+                    }
+                );
+            });
+    }catch (error) {
+        res.status(500).json({message: error.message});
+    }
+});
+
+//login usuario
+router.post('/login', async (req, res) => {
+    try{
+        const {registro_academico, password} = req.body;
+        if(!registro_academico || !password){
+            return res.status(400).json({message: 'Todos los campos son obligatorios'});
+        }
+        await db.query(
+            'SELECT * FROM usuarios WHERE registro_academico = ?',
+            [registro_academico],
+            async (error, results) => {
+                if(error){
+                    console.log('ERROR EN EL LOGIN',err);
+                    return res.status(500).json({message: 'Error en la base de datos'});
+                }
+                if(results.length === 0){
+                    return res.status(400).json({message: 'Registro academico no encontrado'});
+                }
+                const user = results[0];
+                const isPasswordValid = await bcrypt.compare(password, user.password);
+                if(!isPasswordValid){
+                    return res.status(400).json({message: 'Contraseña incorrecta'});
+                }
+                //crear token
+                const token = jwt.sign(
+                    {
+                        userId: user.id,
+                        registro_academico: user.registro_academico,
+                        nombres: user.nombres,
+                        apellidos: user.apellidos,
+                        email: user.email
+                    },
+                    process.env.JWT_SECRET,
+                    {expiresIn: '1h'}
+                )
+                res.json({
+                    message: 'Login exitoso',
+                    token,
+                    user: {
+                        userId: user.id,
+                        registro_academico: user.registro_academico,
+                        nombres: user.nombres,
+                        apellidos: user.apellidos,
+                        email: user.email
+                    }
+                });
+            }
+        );
+    }catch (error) {
+        console.log('CATCH ERROR EN EL LOGIN',error);
+        res.status(500).json({message: error.message});
+    }
+});
+
+//recuperar contrasenia
+router.post('/forgot-password', async (req, res) => {
+    try{
+        const {registro_academico, email,new_password} = req.body;
+        if(!registro_academico || !email || !new_password){
+            return res.status(400).json({message: 'Todos los campos son obligatorios'});
+        }
+
+        //verificar registro y email
+        await db.query(
+            'SELECT * FROM usuarios WHERE registro_academico = ? AND email = ?',
+            [registro_academico, email],
+            async (error, results) => {
+                if(error){
+                    console.log('ERROR EN FORGOT PASSWORD',error);
+                    return res.status(500).json({message: 'Error en la base de datos'});
+                }
+                if(results.length === 0){
+                    return res.status(400).json({message: 'datos no coinciden'})
+                }
+
+                //encriptar nueva contrasenia
+                const hashedPassword = await bcrypt.hash(new_password, 10);
+                //actualizar contrasenia en la base de datos
+                await db.query(
+                    'UPDATE usuarios SET password = ? WHERE registro_academico = ? AND email = ?',
+                    [hashedPassword, registro_academico, email],
+                    (error, results) => {
+                        if(error){
+                            console.log('ERROR EN FORGOT PASSWORD',error);
+                            return res.status(500).json({message: 'Error al actualizar la contrasenia'});
+                        }
+                        res.json({message: 'Contrasenia actualizada exitosamente'});
+                    }
+                )
+            }
+        )
+
+    }catch (error) {
+        console.log('ERROR EN FORGOT PASSWORD',error);
+        res.status(500).json({message: error.message});
+    }
+});
+
+export default router;
